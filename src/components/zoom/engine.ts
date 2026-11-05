@@ -54,6 +54,7 @@ export type ZoomElements = {
   surface?: HTMLElement | null;
   object?: HTMLElement | null;
   inner?: HTMLElement | null;
+  overlay?: HTMLElement | null;
   slot?: HTMLElement | null;
   dialog?: HTMLElement | null;
 };
@@ -275,7 +276,7 @@ export class ZoomEngine {
   }
 
   render() {
-    const { object, inner, slot, content, backdrop, surface, root } = this.els;
+    const { object, inner, overlay, slot, content, backdrop, surface, root } = this.els;
     if (!object || !inner || !slot || !content || this.phase === "idle") return;
 
     // Lectures (avant toute écriture)
@@ -332,6 +333,13 @@ export class ZoomEngine {
 
     const pc = clamp(p);
     if (backdrop) backdrop.style.opacity = String(pc * (1 - dq));
+    // Décor de la source (titre, voile) : identique à la source à p=0, disparaît tôt à
+    // l'ouverture et revient en fin de fermeture. L'opacité est posée sur chaque calque
+    // [data-zoom-fade] (pas sur un parent) pour ne pas casser leurs backdrop-filter.
+    if (overlay) {
+      const o = String(this.reduced ? 0 : 1 - smooth(p / 0.35));
+      overlay.querySelectorAll<HTMLElement>("[data-zoom-fade]").forEach((el) => (el.style.opacity = o));
+    }
     if (surface) surface.style.opacity = String(clamp(p / 0.55) * (1 - dq));
     this.chrome.set(this.reduced ? 1 : smooth((p - 0.55) / 0.45) * (1 - clamp(dq * 2.5)));
     if (root) root.style.opacity = this.reduced ? String(this.fade.get()) : "1";

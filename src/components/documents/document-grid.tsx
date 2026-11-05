@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ZoomPresentation, ZoomSource, useZoom } from "@/components/zoom/zoom";
+import { CardVeil } from "./card-veil";
 import { Cover } from "./cover";
 import { DocumentDetail } from "./document-detail";
 import { getThumb, requestThumb } from "./thumbnails";
@@ -45,12 +46,10 @@ function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
         className="group block w-full cursor-pointer rounded-[22px] p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-mute/50"
         aria-label={`Ouvrir ${doc.title}`}
       >
-        <ZoomSource id={doc.id} className="aspect-[4/5] w-full rounded-[18px] bg-cloud">
+        <ZoomSource id={doc.id} className="relative aspect-[4/5] w-full rounded-[18px] bg-cloud">
           <Cover doc={doc} />
+          <CardVeil title={doc.title} />
         </ZoomSource>
-        <div className="px-1 pb-1 pt-3">
-          <p className="line-clamp-2 text-[15px] font-medium leading-snug text-ink">{doc.title}</p>
-        </div>
       </motion.button>
     </motion.li>
   );
@@ -60,7 +59,7 @@ export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
   const byId = new Map(documents.map((d) => [d.id, d]));
   return (
     <>
-      <ul className="grid grid-cols-2 gap-x-2 gap-y-4 sm:grid-cols-3 sm:gap-x-3 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {documents.map((doc, i) => (
           <DocumentCard key={doc.id} doc={doc} index={i} />
         ))}
@@ -77,6 +76,10 @@ export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
         renderObject={(id) => {
           const doc = byId.get(id);
           return doc ? <Cover doc={doc} /> : null;
+        }}
+        renderOverlay={(id) => {
+          const doc = byId.get(id);
+          return doc ? <CardVeil title={doc.title} /> : null;
         }}
         contentClassName="flex min-h-full items-stretch justify-center sm:items-start sm:px-6 sm:py-14"
         panelClassName="w-full sm:max-w-[680px]"

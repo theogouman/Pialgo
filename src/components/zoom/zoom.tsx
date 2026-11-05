@@ -118,6 +118,12 @@ export function ZoomSecondary({
 type PresentationProps = {
   /** Contenu de l'objet qui zoome (image, couverture…), rendu en « cover ». */
   renderObject: (id: string) => ReactNode;
+  /**
+   * Décor optionnel affiché par-dessus l'objet, à l'identique de la source (titre, voile…).
+   * Il n'est pas mis à l'échelle et s'estompe pendant l'ouverture. Marquer chaque calque
+   * avec data-zoom-fade.
+   */
+  renderOverlay?: (id: string) => ReactNode;
   /** Ratio naturel du contenu de l'objet et son alignement (équivalent object-position). */
   getMeta: (id: string) => ObjectMeta;
   /** Contenu de la vue détail ; doit contenir un <ZoomTarget/>. */
@@ -132,6 +138,7 @@ type PresentationProps = {
 /** Vue détail plein écran, portée dans <body>. */
 export function ZoomPresentation({
   renderObject,
+  renderOverlay,
   getMeta,
   children,
   labelledBy,
@@ -228,6 +235,11 @@ export function ZoomPresentation({
             <div ref={set("inner")} data-zoom-inner className="absolute left-0 top-0" style={{ transformOrigin: "0 0", willChange: "transform" }}>
               {renderObject(activeId)}
             </div>
+            {renderOverlay && (
+              <div ref={set("overlay")} className="absolute inset-0">
+                {renderOverlay(activeId)}
+              </div>
+            )}
           </div>
         </div>
       </div>
