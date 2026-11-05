@@ -1,21 +1,29 @@
 @import "tailwindcss";
 
+/* Thème sobre : pierre chaude, encre profonde, filets fins. */
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
-  --color-ink: #0f0f17;
-  --color-ink-soft: #3a3a46;
-  --color-mute: #868593;
-  --color-line: #e7e7ee;
-  --color-cloud: #f4f4f9;
-  --color-canvas: #fafafc;
-  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --color-ink: #161616;
+  --color-ink-soft: #45433e;
+  --color-mute: #8a877f;
+  --color-line: #e4e2dd;
+  --color-cloud: #efeeea;
+  --color-canvas: #f6f5f2;
 }
 
 :root {
   color-scheme: light;
   /* Pas de saut de mise en page quand le défilement est verrouillé */
   scrollbar-gutter: stable;
+
+  /* Motion tokens — « Skeleton loader and reveal » (transitions.dev) */
+  --pulse-dur: 1000ms;
+  --pulse-count: infinite; /* pulse tant que le document charge */
+  --pulse-min: 0.5;
+  --reveal-dur: 400ms;
+  --reveal-blur: 2px;
+  --reveal-ease: ease-in-out;
 }
 
 html,
@@ -31,25 +39,73 @@ body {
 }
 
 ::selection {
-  background: rgb(134 133 147 / 0.25);
+  background: rgb(22 22 22 / 0.12);
 }
 
-/* Fond animé de l'écran de connexion (sous le verre) */
-@keyframes drift {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  50% {
-    transform: translate3d(4%, -3%, 0) scale(1.08);
-  }
+/* Fond : lumière douce venue du haut + grain très léger */
+.canvas-light {
+  background:
+    radial-gradient(120% 70% at 50% -10%, rgb(255 255 255 / 0.95) 0%, rgb(255 255 255 / 0) 60%),
+    var(--color-canvas);
 }
-.blob {
-  animation: drift 18s ease-in-out infinite;
-  will-change: transform;
+.canvas-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+}
+
+/* ---------- Skeleton loader and reveal (transitions.dev) ---------- */
+/* The wrap stacks two layers on the same coordinates. The
+   skeleton owns the cold pulse + the fade-out side of the
+   reveal; the content owns the fade-in side. */
+.t-skel { position: relative; }
+.t-skel-skeleton,
+.t-skel-content {
+  position: absolute;
+  inset: 0;
+}
+.t-skel-skeleton {
+  z-index: 1;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter  var(--reveal-dur) var(--reveal-ease);
+}
+.t-skel-content {
+  z-index: 2;
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter  var(--reveal-dur) var(--reveal-ease);
+}
+.t-skel.is-revealed .t-skel-skeleton {
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+}
+.t-skel.is-revealed .t-skel-content {
+  opacity: 1;
+  filter: blur(0);
+}
+.t-skel.is-resetting .t-skel-skeleton,
+.t-skel.is-resetting .t-skel-content {
+  transition: none !important;
+}
+.t-skel-skeleton.is-pulsing > * {
+  animation: t-skel-pulse var(--pulse-dur) ease-in-out var(--pulse-count);
+}
+/* Une fois révélé, plus besoin de pulser (évite du travail inutile). */
+.t-skel.is-revealed .t-skel-skeleton.is-pulsing > * {
+  animation-iteration-count: 1;
+}
+@keyframes t-skel-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: var(--pulse-min); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .blob {
-    animation: none;
+  .t-skel-skeleton, .t-skel-content {
+    transition: none !important;
   }
+  .t-skel-skeleton.is-pulsing > * { animation: none !important; }
 }

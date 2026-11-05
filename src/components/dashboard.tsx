@@ -29,7 +29,8 @@ export function Dashboard({
   return (
     <ZoomProvider>
       <div className="relative min-h-dvh">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(60%_100%_at_20%_0%,#ECE8FF_0%,transparent_70%),radial-gradient(50%_80%_at_90%_0%,#FFEDE6_0%,transparent_70%)]" />
+        <div aria-hidden className="canvas-light pointer-events-none fixed inset-0" />
+        <div aria-hidden className="canvas-grain pointer-events-none fixed inset-0" />
         <main className="relative mx-auto max-w-5xl px-4 pb-24 pt-5 sm:px-8 sm:pt-8">
           <div className="flex justify-end">
             <SettingsMenu userName={userName} />

@@ -34,7 +34,7 @@ const smooth = (t: number) => {
 
 /** Ombre de l'objet. dq=0 : ombre « posée », identique sur la source et la destination. */
 export function zoomShadow(dq = 0) {
-  return `0 1px 2px rgba(15,15,30,0.06), 0 ${8 + 22 * dq}px ${24 + 36 * dq}px -6px rgba(15,15,30,${(0.12 + 0.16 * dq).toFixed(3)})`;
+  return `0 1px 2px rgba(20,20,20,0.06), 0 ${8 + 22 * dq}px ${24 + 36 * dq}px -6px rgba(20,20,20,${(0.12 + 0.16 * dq).toFixed(3)})`;
 }
 export const ZOOM_REST_SHADOW = zoomShadow(0);
 

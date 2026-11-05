@@ -42,7 +42,7 @@ export function SettingsMenu({ userName }: { userName: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         whileTap={reduce ? undefined : { scale: 0.92 }}
-        className="grid size-10 place-items-center rounded-full border border-white/70 bg-white/60 text-ink-soft shadow-[0_1px_2px_rgba(15,15,30,0.06),0_6px_16px_-6px_rgba(15,15,30,0.15)] backdrop-blur-xl outline-none focus-visible:ring-2 focus-visible:ring-[#868593]/50"
+        className="grid size-10 place-items-center rounded-full border border-line bg-white/80 text-ink-soft shadow-[0_1px_2px_rgba(20,20,20,0.05)] backdrop-blur-xl outline-none focus-visible:ring-2 focus-visible:ring-mute/50"
       >
         <motion.span
           animate={{ rotate: open ? 90 : 0 }}
@@ -62,7 +62,7 @@ export function SettingsMenu({ userName }: { userName: string }) {
             exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.94, y: -4, filter: "blur(4px)" }}
             transition={{ type: "spring", visualDuration: 0.28, bounce: 0.15 }}
             style={{ transformOrigin: "top right" }}
-            className="absolute right-0 top-12 z-40 w-56 overflow-hidden rounded-[20px] border border-white/70 bg-white/75 p-1.5 shadow-[0_1px_2px_rgba(15,15,30,0.06),0_18px_40px_-12px_rgba(15,15,30,0.25)] backdrop-blur-2xl"
+            className="absolute right-0 top-12 z-40 w-56 overflow-hidden rounded-[20px] border border-line bg-white/85 p-1.5 shadow-[0_1px_2px_rgba(20,20,20,0.05),0_18px_40px_-12px_rgba(20,20,20,0.2)] backdrop-blur-2xl"
           >
             <div className="px-3 pb-2 pt-2">
               <p className="text-[12px] text-mute">Connecté·e en tant que</p>

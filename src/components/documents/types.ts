@@ -16,3 +16,9 @@ export function formatDate(iso: string | null, long = false) {
   const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
   return d.toLocaleDateString("fr-FR", long ? { day: "numeric", month: "long", year: "numeric" } : { day: "numeric", month: "short", year: "numeric" });
 }
+
+/** "05 octobre 2026" (format JJ MMMM AAAA). */
+export function addedOn(iso: string) {
+  const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
+  return d.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric", timeZone: "Europe/Paris" });
+}

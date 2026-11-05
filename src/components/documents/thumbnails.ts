@@ -11,10 +11,15 @@ import { fileUrl, type DocumentItem } from "./types";
  *  - autre : couverture vectorielle (ratio 1)
  */
 export type Thumb =
+  | { status: "loading"; aspect: number; align: [number, number] }
   | { status: "art"; aspect: 1; align: [number, number] }
   | { status: "ready"; src: string; aspect: number; align: [number, number] };
 
 const ART: Thumb = { status: "art", aspect: 1, align: [0.5, 0.5] };
+// Pendant le chargement, ratio de la case de la grille (4:5) : le squelette remplit le cadre.
+const LOADING: Thumb = { status: "loading", aspect: 0.8, align: [0.5, 0] };
+
+const previewable = (doc: DocumentItem) => doc.files.some((f) => f.kind === "image" || f.kind === "pdf");
 const cache = new Map<string, Thumb>();
 const started = new Set<string>();
 const listeners = new Set<() => void>();
@@ -25,12 +30,13 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
-export function getThumb(id: string): Thumb {
-  return cache.get(id) ?? ART;
+export function getThumb(doc: DocumentItem): Thumb {
+  return cache.get(doc.id) ?? (previewable(doc) ? LOADING : ART);
 }
 
-export function useThumb(id: string) {
-  return useSyncExternalStore(subscribe, () => getThumb(id), () => ART);
+export function useThumb(doc: DocumentItem) {
+  const initial = previewable(doc) ? LOADING : ART;
+  return useSyncExternalStore(subscribe, () => getThumb(doc), () => initial);
 }
 
 // File d'attente : 2 rendus PDF simultanés maximum.
@@ -114,6 +120,8 @@ export function requestThumb(doc: DocumentItem) {
       emit();
     } catch (err) {
       console.warn("[miniature] échec", doc.title, err);
+      cache.set(doc.id, ART);
+      emit();
     }
   });
 }

@@ -6,7 +6,7 @@ import { ZoomPresentation, ZoomSource, useZoom } from "@/components/zoom/zoom";
 import { Cover } from "./cover";
 import { DocumentDetail } from "./document-detail";
 import { getThumb, requestThumb } from "./thumbnails";
-import { formatDate, type DocumentItem } from "./types";
+import type { DocumentItem } from "./types";
 
 function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
   const { open } = useZoom();
@@ -42,7 +42,7 @@ function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
         onClick={() => open(doc.id)}
         whileTap={reduce ? undefined : { scale: 0.97 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        className="group block w-full cursor-pointer rounded-[22px] p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#868593]/50"
+        className="group block w-full cursor-pointer rounded-[22px] p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-mute/50"
         aria-label={`Ouvrir ${doc.title}`}
       >
         <ZoomSource id={doc.id} className="aspect-[4/5] w-full rounded-[18px] bg-cloud">
@@ -50,10 +50,6 @@ function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
         </ZoomSource>
         <div className="px-1 pb-1 pt-3">
           <p className="line-clamp-2 text-[15px] font-medium leading-snug text-ink">{doc.title}</p>
-          <p className="mt-1 text-[13px] text-mute">
-            {formatDate(doc.date)}
-            {doc.files.length > 1 ? ` · ${doc.files.length} fichiers` : ""}
-          </p>
         </div>
       </motion.button>
     </motion.li>
@@ -73,7 +69,9 @@ export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
       <ZoomPresentation
         labelledBy="doc-title"
         getMeta={(id) => {
-          const t = getThumb(id);
+          const doc = byId.get(id);
+          if (!doc) return { aspect: 1 };
+          const t = getThumb(doc);
           return { aspect: t.aspect, align: t.align };
         }}
         renderObject={(id) => {
@@ -82,7 +80,7 @@ export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
         }}
         contentClassName="flex min-h-full items-stretch justify-center sm:items-start sm:px-6 sm:py-14"
         panelClassName="w-full sm:max-w-[680px]"
-        surfaceClassName="bg-white sm:rounded-[32px] sm:shadow-[0_1px_2px_rgba(15,15,30,0.06),0_30px_80px_-20px_rgba(15,15,30,0.35)]"
+        surfaceClassName="bg-white sm:rounded-[32px] sm:shadow-[0_1px_2px_rgba(20,20,20,0.06),0_30px_80px_-20px_rgba(20,20,20,0.3)]"
       >
         {(id) => {
           const doc = byId.get(id);

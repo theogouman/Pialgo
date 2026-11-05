@@ -40,7 +40,8 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ pageId: str
   const headers = new Headers({
     "Content-Type": type,
     "Content-Disposition": `${download ? "attachment" : "inline"}; filename*=UTF-8''${filename}`,
-    "Cache-Control": "private, max-age=3600",
+    "Cache-Control": "private, no-store",
+    "X-Robots-Tag": "noindex, nofollow",
     "X-Content-Type-Options": "nosniff",
   });
   const len = upstream.headers.get("content-length");
