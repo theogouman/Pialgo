@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-ink: #0f0f17;
+  --color-ink-soft: #3a3a46;
+  --color-mute: #868593;
+  --color-line: #e7e7ee;
+  --color-cloud: #f4f4f9;
+  --color-canvas: #fafafc;
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: light;
+  /* Pas de saut de mise en page quand le défilement est verrouillé */
+  scrollbar-gutter: stable;
+}
+
+html,
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: rgb(134 133 147 / 0.25);
+}
+
+/* Fond animé de l'écran de connexion (sous le verre) */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) scale(1.08);
+  }
+}
+.blob {
+  animation: drift 18s ease-in-out infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .blob {
+    animation: none;
+  }
+}
