@@ -3,11 +3,13 @@ export const SESSION_COOKIE = "pialgo_session";
 export const CHALLENGE_COOKIE = "pialgo_otp";
 export const SESSION_MAX_AGE = 60 * 60 * 24 * 30; // 30 jours
 
+import { env } from "./env";
+
 let cached: Uint8Array | null = null;
 
 export function authSecret(): Uint8Array {
   if (cached) return cached;
-  const raw = process.env.AUTH_SECRET;
+  const raw = env("AUTH_SECRET");
   if (!raw || raw.length < 32) {
     if (process.env.NODE_ENV === "production") {
       throw new Error("AUTH_SECRET manquant ou trop court (32 caractères minimum).");

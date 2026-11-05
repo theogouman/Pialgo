@@ -1,5 +1,6 @@
 import "server-only";
 import nodemailer from "nodemailer";
+import { env } from "./env";
 
 /**
  * Envoi via le compte Gmail theo@gouman.fr.
@@ -11,8 +12,12 @@ import nodemailer from "nodemailer";
  * En développement sans configuration, le code est affiché dans la console.
  */
 function transport() {
-  const user = process.env.GMAIL_USER ?? "theo@gouman.fr";
-  const { GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, GMAIL_REFRESH_TOKEN, GMAIL_APP_PASSWORD } = process.env;
+  const user = env("GMAIL_USER") ?? "theo@gouman.fr";
+  const GMAIL_CLIENT_ID = env("GMAIL_CLIENT_ID");
+  const GMAIL_CLIENT_SECRET = env("GMAIL_CLIENT_SECRET");
+  const GMAIL_REFRESH_TOKEN = env("GMAIL_REFRESH_TOKEN");
+  // Google affiche le mot de passe d'application par groupes de 4 : on retire les espaces.
+  const GMAIL_APP_PASSWORD = env("GMAIL_APP_PASSWORD")?.replace(/\s+/g, "");
 
   if (GMAIL_CLIENT_ID && GMAIL_CLIENT_SECRET && GMAIL_REFRESH_TOKEN) {
     return {

@@ -1,4 +1,5 @@
 import "server-only";
+import { env } from "./env";
 
 /**
  * Petit stockage clé/valeur avec expiration, utilisé pour les codes OTP
@@ -91,8 +92,8 @@ const g = globalThis as unknown as { __pialgoStore?: KVStore };
 
 export function store(): KVStore {
   if (g.__pialgoStore) return g.__pialgoStore;
-  const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+  const url = env("UPSTASH_REDIS_REST_URL") ?? env("KV_REST_API_URL");
+  const token = env("UPSTASH_REDIS_REST_TOKEN") ?? env("KV_REST_API_TOKEN");
   if (url && token) {
     g.__pialgoStore = new UpstashStore(url, token);
   } else {

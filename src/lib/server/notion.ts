@@ -1,4 +1,5 @@
 import "server-only";
+import { env } from "./env";
 
 /**
  * Lecture de la base Notion « Documents » (SCI Pialgo).
@@ -9,7 +10,7 @@ const NOTION_VERSION = "2025-09-03";
 const API = "https://api.notion.com/v1";
 
 export const DATA_SOURCE_ID =
-  process.env.NOTION_DATA_SOURCE_ID ?? "40fbad05-6a95-804f-ab16-000b56571976";
+  env("NOTION_DATA_SOURCE_ID") ?? "40fbad05-6a95-804f-ab16-000b56571976";
 
 export type DocFile = {
   index: number;
@@ -44,7 +45,7 @@ type NotionPage = {
 };
 
 function headers() {
-  const token = process.env.NOTION_TOKEN;
+  const token = env("NOTION_TOKEN");
   if (!token) throw new Error("NOTION_TOKEN manquant.");
   return {
     Authorization: `Bearer ${token}`,
@@ -54,7 +55,7 @@ function headers() {
 }
 
 export function isNotionConfigured() {
-  return Boolean(process.env.NOTION_TOKEN);
+  return Boolean(env("NOTION_TOKEN"));
 }
 
 const normId = (id: string) => id.replace(/-/g, "").toLowerCase();
@@ -121,7 +122,7 @@ export async function getFileSource(pageId: string, index: number) {
   if (!res.ok) return null;
   const page = (await res.json()) as NotionPage;
   const parent = page.parent.data_source_id ?? page.parent.database_id;
-  const allowed = [normId(DATA_SOURCE_ID), normId(process.env.NOTION_DATABASE_ID ?? "40fbad056a9580b7b187d850f8624029")];
+  const allowed = [normId(DATA_SOURCE_ID), normId(env("NOTION_DATABASE_ID") ?? "40fbad056a9580b7b187d850f8624029")];
   if (!parent || !allowed.includes(normId(parent)) || page.in_trash || page.archived) return null;
   const file = filesOf(page)[index];
   if (!file) return null;
