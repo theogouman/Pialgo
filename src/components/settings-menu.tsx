@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { LogOut, Settings } from "lucide-react";
+import { clearCache } from "@/components/documents/file-cache";
 
 export function SettingsMenu({ userName }: { userName: string }) {
   const [open, setOpen] = useState(false);
@@ -28,7 +29,8 @@ export function SettingsMenu({ userName }: { userName: string }) {
 
   async function logout() {
     setPending(true);
-    await fetch("/api/auth/logout", { method: "POST" });
+    // Rien ne doit rester sur l'appareil après déconnexion.
+    await Promise.all([fetch("/api/auth/logout", { method: "POST" }), clearCache()]);
     router.replace("/login");
     router.refresh();
   }

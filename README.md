@@ -34,6 +34,8 @@ Sans Gmail configuré, en développement, le code OTP est affiché dans la conso
 
 Propriétés lues : `Nom` (titre), `Descriptions` (texte), `Fichiers` (fichiers), `Date d'ajout` (date, tri décroissant). Miniatures : image → l'image ; PDF → 1re page rendue avec pdf.js dans le navigateur ; autre → couverture générée.
 
+Cache local (`src/components/documents/file-cache.ts`) : fichiers, miniatures et pages rendues sont gardés dans le Cache Storage du navigateur, versionnés par la date de modification Notion (un document modifié est rechargé, l'ancienne version purgée). Un document déjà ouvert ne relance aucune requête. Le cache est vidé à la déconnexion.
+
 ## Transition « zoom » réutilisable
 
 `src/components/zoom/` — moteur (`engine.ts`) + composants React (`zoom.tsx`) :

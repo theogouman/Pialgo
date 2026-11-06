@@ -13,15 +13,16 @@ const f = (name: string, index = 0) => {
 };
 
 export const DEMO_DOCS: DocumentItem[] = [
-  { id: "00000000-0000-0000-0000-000000000001", title: "Statuts de la SCI", description: "Statuts signés lors de la constitution.\nVersion à jour après la dernière AG.", date: "2026-10-12", files: [f("statuts.pdf")] },
-  { id: "00000000-0000-0000-0000-000000000002", title: "Photo de la façade", description: "Vue de la rue, octobre.", date: "2026-10-02", files: [f("facade.png")] },
-  { id: "00000000-0000-0000-0000-000000000003", title: "PV d'assemblée générale 2026", description: "Approbation des comptes et affectation du résultat.", date: "2026-06-30", files: [f("pv-ag-2026.docx")] },
-  { id: "00000000-0000-0000-0000-000000000004", title: "Acte de propriété", description: "", date: "2025-03-18", files: [f("acte.pdf"), f("annexes.xlsx", 1)] },
+  { id: "00000000-0000-0000-0000-000000000001", title: "Statuts de la SCI", description: "Statuts signés lors de la constitution.\nVersion à jour après la dernière AG.", date: "2026-10-12", version: "1", files: [f("statuts.pdf")] },
+  { id: "00000000-0000-0000-0000-000000000002", title: "Photo de la façade", description: "Vue de la rue, octobre.", date: "2026-10-02", version: "1", files: [f("facade.png")] },
+  { id: "00000000-0000-0000-0000-000000000003", title: "PV d'assemblée générale 2026", description: "Approbation des comptes et affectation du résultat.", date: "2026-06-30", version: "1", files: [f("pv-ag-2026.docx")] },
+  { id: "00000000-0000-0000-0000-000000000004", title: "Acte de propriété", description: "", date: "2025-03-18", version: "1", files: [f("acte.pdf"), f("annexes.xlsx", 1)] },
   ...Array.from({ length: 10 }, (_, i) => ({
     id: `00000000-0000-0000-0000-0000000001${String(i).padStart(2, "0")}`,
     title: `Avis d'imposition ${2025 - i}`,
     description: "Taxe foncière.",
     date: `${2025 - i}-09-15`,
+    version: "1",
     files: [f(`taxe-${2025 - i}.txt`)],
   })),
 ];

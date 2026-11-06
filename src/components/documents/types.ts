@@ -5,6 +5,8 @@ export type DocumentItem = {
   title: string;
   description: string;
   date: string | null;
+  /** Dernière modification Notion : invalide le cache local quand le document change. */
+  version: string;
   files: DocFile[];
 };
 

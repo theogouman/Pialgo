@@ -68,10 +68,16 @@ type TouchState =
 let scrollLocks = 0;
 const openStack: ZoomEngine[] = [];
 
-/** Vrai pendant une transition ou un geste : les travaux lourds (rendu PDF) attendent. */
+/**
+ * Vrai pendant la partie visible d'une transition (le ressort a une longue traîne
+ * imperceptible, inutile d'attendre sa fin) ou pendant un geste : les travaux lourds
+ * (rendu PDF) attendent.
+ */
 export function zoomBusy() {
-  return openStack.some((e) => e.phase !== "open" || e.gesturing());
+  const now = performance.now();
+  return openStack.some((e) => e.moving(now) || e.gesturing());
 }
+const VISIBLE_MOTION_MS = 450;
 
 export class ZoomEngine {
   readonly p = motionValue(0);
@@ -201,6 +207,7 @@ export class ZoomEngine {
     if (this.phase === "idle" || this.phase === "closing") return;
     if (!this.pinchToClose) this.resetPageZoom();
     this.phase = "closing";
+    this.motionAt = performance.now();
     const token = ++this.token;
     this.setInert(false);
     if (this.els.root) this.els.root.style.pointerEvents = "none";
@@ -231,6 +238,7 @@ export class ZoomEngine {
     const id = this.activeId;
     if (!id || this.phase !== "opening") return;
     const token = ++this.token;
+    this.motionAt = performance.now();
     this.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const src = this.sources.get(id) ?? null;
     this.sourceEl = src;
@@ -275,6 +283,7 @@ export class ZoomEngine {
 
   private reopen() {
     const token = ++this.token;
+    this.motionAt = performance.now();
     this.phase = "opening";
     this.setInert(true);
     if (this.els.root) this.els.root.style.pointerEvents = "";
@@ -618,6 +627,12 @@ export class ZoomEngine {
       scroller.removeEventListener("gesturestart", onGesture);
       scroller.removeEventListener("click", onClickCapture, true);
     };
+  }
+
+  /** Horodatage du dernier départ d'animation (ouverture, fermeture, relâchement). */
+  private motionAt = 0;
+  moving(now: number) {
+    return (this.phase === "opening" || this.phase === "closing") && now - this.motionAt < VISIBLE_MOTION_MS;
   }
 
   gesturing() {

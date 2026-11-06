@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ZoomPresentation, ZoomSource, useZoom } from "@/components/zoom/zoom";
 import { CardVeil } from "./card-veil";
+import { pruneCache } from "./file-cache";
 import { Cover } from "./cover";
 import { DocumentDetail } from "./document-detail";
 import { getThumb, prefetchDocument, requestThumb } from "./thumbnails";
@@ -63,6 +64,12 @@ const detailPageColor = () => (window.matchMedia("(min-width: 640px)").matches ?
 
 export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
   const byId = new Map(documents.map((d) => [d.id, d]));
+
+  // Purge du cache local : documents supprimés ou modifiés dans Notion.
+  useEffect(() => {
+    const t = setTimeout(() => void pruneCache(documents), 3000);
+    return () => clearTimeout(t);
+  }, [documents]);
   return (
     <>
       <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">

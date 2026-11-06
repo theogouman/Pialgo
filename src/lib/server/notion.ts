@@ -24,6 +24,8 @@ export type DocumentItem = {
   title: string;
   description: string;
   date: string | null; // ISO
+  /** Date de dernière modification Notion : version du document (clé de cache). */
+  version: string;
   files: DocFile[];
 };
 
@@ -38,6 +40,7 @@ type NotionPage = {
   id: string;
   object: "page";
   created_time: string;
+  last_edited_time: string;
   in_trash?: boolean;
   archived?: boolean;
   parent: { type: string; data_source_id?: string; database_id?: string };
@@ -86,6 +89,7 @@ function toItem(page: NotionPage): DocumentItem {
     title: title || "Sans titre",
     description,
     date,
+    version: page.last_edited_time,
     files: filesOf(page).map((f, index) => ({ index, name: f.name, ...fileKind(f.name) })),
   };
 }
