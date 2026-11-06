@@ -26,6 +26,8 @@ export function LoginFlow() {
   const [status, setStatus] = useState<OtpStatus>("idle");
   const [verifying, setVerifying] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  // Après un renvoi, l'ancien code n'est plus valable : on le signale.
+  const [resent, setResent] = useState(false);
   const otpRef = useRef<HTMLDivElement>(null);
   const focusFirstSlot = () =>
     requestAnimationFrame(() => otpRef.current?.querySelector<HTMLInputElement>("input")?.focus());
@@ -43,6 +45,7 @@ export function LoginFlow() {
     setSending(true);
     setError(null);
     if (fromChoose) {
+      setResent(false);
       setSentTo([]);
       setCode("");
       setStatus("idle");
@@ -71,6 +74,7 @@ export function LoginFlow() {
       }
       setSentTo(json.sentTo ?? []);
       setCooldown(30);
+      setResent(!fromChoose);
     } catch {
       fail("Connexion impossible. Vérifiez votre réseau.");
     } finally {
@@ -296,6 +300,9 @@ export function LoginFlow() {
                     </button>
                   )}
                 </div>
+                {resent && !error && status !== "success" && (
+                  <p className="pt-2 text-center text-[13px] text-mute">Nouveau code envoyé : seul le dernier reçu est valable.</p>
+                )}
                 <ErrorLine error={error} center />
               </Panel>
             )}

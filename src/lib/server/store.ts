@@ -99,8 +99,8 @@ export function store(): KVStore {
   } else {
     if (process.env.NODE_ENV === "production") {
       console.warn(
-        "[otp] Aucun stockage Redis configuré : stockage mémoire utilisé. " +
-          "Le compteur de tentatives n'est pas fiable en serverless.",
+        "[otp] Pas de Redis configuré : compteur d'essais et usage unique limités à chaque instance " +
+          "(la vérification du code, elle, fonctionne). Configurez UPSTASH_REDIS_REST_URL/TOKEN.",
       );
     }
     g.__pialgoStore = new MemoryStore();
