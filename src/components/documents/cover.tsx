@@ -29,12 +29,12 @@ function Artwork({ doc }: { doc: DocumentItem }) {
 function PageSkeleton() {
   return (
     <div className="t-skel-skeleton is-pulsing flex flex-col gap-[6%] bg-[#ECEBE7] px-[12%] pt-[14%]">
-      <div className="h-[5%] w-[62%] rounded-full bg-[#DEDCD6]" />
-      <div className="h-[3%] w-[40%] rounded-full bg-[#E3E1DC]" />
-      <div className="mt-[4%] h-[3%] w-full rounded-full bg-[#E3E1DC]" />
-      <div className="h-[3%] w-[88%] rounded-full bg-[#E3E1DC]" />
-      <div className="h-[3%] w-[94%] rounded-full bg-[#E3E1DC]" />
-      <div className="h-[3%] w-[70%] rounded-full bg-[#E3E1DC]" />
+      <div className="h-[5%] w-[62%] rounded-full bg-[#BDB9B0]" />
+      <div className="h-[3%] w-[40%] rounded-full bg-[#CBC7BF]" />
+      <div className="mt-[4%] h-[3%] w-full rounded-full bg-[#CBC7BF]" />
+      <div className="h-[3%] w-[88%] rounded-full bg-[#CBC7BF]" />
+      <div className="h-[3%] w-[94%] rounded-full bg-[#CBC7BF]" />
+      <div className="h-[3%] w-[70%] rounded-full bg-[#CBC7BF]" />
     </div>
   );
 }

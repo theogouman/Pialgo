@@ -149,6 +149,10 @@ type PresentationProps = {
   surfaceClassName?: string;
   contentClassName?: string;
   backdropClassName?: string;
+  /** false : le pincement zoome la page (lecture) au lieu de fermer. Défaut : true. */
+  pinchToClose?: boolean;
+  /** Couleur appliquée à la page et à la barre du navigateur pendant l'ouverture (évaluée à l'ouverture). */
+  pageColor?: string | (() => string | null);
 };
 
 /** Vue détail plein écran, portée dans <body>. */
@@ -162,11 +166,17 @@ export function ZoomPresentation({
   surfaceClassName,
   contentClassName,
   backdropClassName,
+  pinchToClose = true,
+  pageColor,
 }: PresentationProps) {
   const { engine, activeId, close } = useZoom();
   const scrollerRef = useRef<HTMLDivElement | null>(null);
 
   const meta = activeId ? getMeta(activeId) : null;
+
+  useLayoutEffect(() => {
+    engine.setOptions({ pinchToClose, pageColor: pageColor ?? null });
+  }, [engine, pinchToClose, pageColor]);
 
   // Le contenu de l'objet peut changer de ratio (miniature chargée…).
   useLayoutEffect(() => {
@@ -216,7 +226,9 @@ export function ZoomPresentation({
   };
 
   return createPortal(
-    <div ref={set("root")} className="fixed inset-0 z-50" data-zoom-root>
+    // Hauteur « grand viewport » (lvh) : le calque passe aussi sous les barres
+    // flottantes de Safari, sans bandeau de couleur de page en dessous.
+    <div ref={set("root")} className="fixed inset-x-0 top-0 z-50 h-[100lvh]" data-zoom-root>
       <div
         ref={set("backdrop")}
         aria-hidden
@@ -226,7 +238,7 @@ export function ZoomPresentation({
       <div
         ref={scrollerRef}
         className="absolute inset-0 overflow-y-auto overscroll-contain"
-        style={{ touchAction: "pan-y" }}
+        style={{ touchAction: pinchToClose ? "pan-y" : "manipulation" }}
         onClick={onBackdropClick}
       >
         <div ref={set("content")} className={cn("relative min-h-full", contentClassName)} onClick={onBackdropClick}>

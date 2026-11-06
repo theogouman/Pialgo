@@ -24,7 +24,7 @@
   /* Motion tokens — « Skeleton loader and reveal » (transitions.dev) */
   --pulse-dur: 1000ms;
   --pulse-count: infinite; /* pulse tant que le document charge */
-  --pulse-min: 0.5;
+  --pulse-min: 0.35;
   --reveal-dur: 400ms;
   --reveal-blur: 2px;
   --reveal-ease: ease-in-out;

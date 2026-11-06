@@ -121,6 +121,49 @@ export class ZoomEngine {
     this.els[key] = el;
   }
 
+  /** Pincement pour fermer (sinon : zoom natif du navigateur, utile pour lire un document). */
+  pinchToClose = true;
+  /** Couleur de page pendant l'ouverture (fond de html + theme-color : barres de Safari). */
+  pageColor: string | (() => string | null) | null = null;
+  private savedPage: { bg: string; theme: string | null } | null = null;
+
+  setOptions(o: { pinchToClose?: boolean; pageColor?: string | (() => string | null) | null }) {
+    if (o.pinchToClose !== undefined) this.pinchToClose = o.pinchToClose;
+    if (o.pageColor !== undefined) this.pageColor = o.pageColor;
+  }
+
+  private applyPageColor() {
+    const color = typeof this.pageColor === "function" ? this.pageColor() : this.pageColor;
+    if (!color || this.savedPage) return;
+    const html = document.documentElement;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    this.savedPage = { bg: html.style.backgroundColor, theme: meta?.content ?? null };
+    html.style.backgroundColor = color;
+    document.body.style.backgroundColor = color;
+    if (meta) meta.content = color;
+  }
+
+  private restorePageColor() {
+    if (!this.savedPage) return;
+    const html = document.documentElement;
+    html.style.backgroundColor = this.savedPage.bg;
+    document.body.style.backgroundColor = this.savedPage.bg;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta && this.savedPage.theme !== null) meta.content = this.savedPage.theme;
+    this.savedPage = null;
+  }
+
+  /** Ramène le zoom natif (pincement) à 100 % — astuce viewport, efficace sur iOS. */
+  private resetPageZoom() {
+    const vv = window.visualViewport;
+    if (!vv || vv.scale <= 1.01) return;
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+    if (!meta) return;
+    const original = meta.content;
+    meta.content = `${original}, maximum-scale=1`;
+    setTimeout(() => (meta.content = original), 400);
+  }
+
   setMeta(meta: ObjectMeta) {
     this.meta = meta;
     this.schedule();
@@ -151,6 +194,7 @@ export class ZoomEngine {
 
   close(v: Velocity = { x: 0, y: 0, k: 0 }) {
     if (this.phase === "idle" || this.phase === "closing") return;
+    if (!this.pinchToClose) this.resetPageZoom();
     this.phase = "closing";
     const token = ++this.token;
     this.setInert(false);
@@ -198,6 +242,7 @@ export class ZoomEngine {
     }
     this.lockScroll();
     this.setInert(true);
+    this.applyPageColor();
     if (!openStack.includes(this)) openStack.push(this);
 
     this.stopAll();
@@ -255,6 +300,7 @@ export class ZoomEngine {
     if (this.els.root) this.els.root.style.display = "none";
     this.unlockScroll();
     this.setInert(false);
+    this.restorePageColor();
     const i = openStack.indexOf(this);
     if (i >= 0) openStack.splice(i, 1);
     const focusTarget =
@@ -440,8 +486,12 @@ export class ZoomEngine {
 
     const onTouchStart = (e: TouchEvent) => {
       if (!this.interactive()) return;
+      const zoomed = (window.visualViewport?.scale ?? 1) > 1.01;
       if (e.touches.length === 1 && this.touch.mode === "none") {
-        this.touch = { mode: "pending", x0: e.touches[0].clientX, y0: e.touches[0].clientY };
+        // Page agrandie au pincement : un doigt sert à se déplacer, pas à fermer.
+        this.touch = zoomed ? { mode: "none" } : { mode: "pending", x0: e.touches[0].clientX, y0: e.touches[0].clientY };
+      } else if (e.touches.length === 2 && !this.pinchToClose) {
+        this.touch = { mode: "none" }; // zoom natif du navigateur
       } else if (e.touches.length === 2) {
         const m = mid(e.touches);
         this.beginGesture(m.x, m.y);
@@ -527,7 +577,9 @@ export class ZoomEngine {
         }
       }
     };
-    const onGesture = (e: Event) => e.preventDefault(); // Safari iOS : pas de zoom navigateur
+    const onGesture = (e: Event) => {
+      if (this.pinchToClose) e.preventDefault(); // Safari iOS : pas de zoom navigateur
+    };
     // Un cliquer-glisser ne doit pas déclencher de clic (lien, fond) au relâchement.
     const onClickCapture = (e: MouseEvent) => {
       if (this.clickSuppressed()) {

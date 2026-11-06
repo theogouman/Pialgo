@@ -55,6 +55,8 @@ function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
   );
 }
 
+const detailPageColor = () => (window.matchMedia("(min-width: 640px)").matches ? null : "#ffffff");
+
 export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
   const byId = new Map(documents.map((d) => [d.id, d]));
   return (
@@ -81,6 +83,8 @@ export function DocumentGrid({ documents }: { documents: DocumentItem[] }) {
           const doc = byId.get(id);
           return doc ? <CardVeil title={doc.title} /> : null;
         }}
+        // Sur mobile la vue détail est plein écran et blanche : Safari prend la même teinte.
+        pageColor={detailPageColor}
         contentClassName="flex min-h-full items-stretch justify-center sm:items-start sm:px-6 sm:py-14"
         panelClassName="w-full sm:max-w-[680px]"
         surfaceClassName="bg-white sm:rounded-[32px] sm:shadow-[0_1px_2px_rgba(20,20,20,0.06),0_30px_80px_-20px_rgba(20,20,20,0.3)]"

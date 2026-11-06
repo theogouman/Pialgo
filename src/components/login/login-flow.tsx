@@ -37,9 +37,24 @@ export function LoginFlow() {
   }, [cooldown]);
 
   async function requestCode(id: PersonId) {
+    // Passage immédiat à la saisie du code : la requête se fait en arrière-plan.
+    const fromChoose = step !== "code";
     setPerson(id);
     setSending(true);
     setError(null);
+    if (fromChoose) {
+      setSentTo([]);
+      setCode("");
+      setStatus("idle");
+      setStep("code");
+    }
+    const fail = (message: string) => {
+      setError(message);
+      if (fromChoose) {
+        setStep("choose");
+        setPerson(null);
+      }
+    };
     try {
       const res = await fetch("/api/auth/request", {
         method: "POST",
@@ -48,17 +63,16 @@ export function LoginFlow() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(json.error ?? "Une erreur est survenue.");
-        if (res.status === 429 && step === "code") setCooldown(30);
+        if (res.status === 429 && !fromChoose) {
+          setError(json.error ?? "Patientez avant de redemander un code.");
+          setCooldown(30);
+        } else fail(json.error ?? "Une erreur est survenue.");
         return;
       }
       setSentTo(json.sentTo ?? []);
-      setCode("");
-      setStatus("idle");
       setCooldown(30);
-      setStep("code");
     } catch {
-      setError("Connexion impossible. Vérifiez votre réseau.");
+      fail("Connexion impossible. Vérifiez votre réseau.");
     } finally {
       setSending(false);
     }
@@ -238,7 +252,15 @@ export function LoginFlow() {
                 </button>
                 <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">Bonjour {name}</h2>
                 <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">
-                  Saisissez le code envoyé à <span className="font-medium text-ink">{sentTo.join(" et ")}</span>
+                  {sentTo.length ? (
+                    <>
+                      Saisissez le code envoyé à <span className="font-medium text-ink">{sentTo.join(" et ")}</span>
+                    </>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <Loader2 className="size-3.5 animate-spin" /> Envoi du code par e-mail…
+                    </span>
+                  )}
                 </p>
                 <div ref={otpRef} className="mt-6 flex justify-center">
                   <OtpInput

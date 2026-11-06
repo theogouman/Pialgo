@@ -1,5 +1,5 @@
 import "server-only";
-import nodemailer from "nodemailer";
+import nodemailer, { type Transporter } from "nodemailer";
 import { env } from "./env";
 
 /**
@@ -11,36 +11,41 @@ import { env } from "./env";
  *      GMAIL_USER, GMAIL_APP_PASSWORD
  * En développement sans configuration, le code est affiché dans la console.
  */
-function transport() {
+type Transport = { user: string; t: Transporter };
+let cached: Transport | null | undefined;
+
+/**
+ * Transport créé une seule fois par instance, en mode « pool » : la connexion SMTP
+ * (TLS + authentification) est réutilisée tant que la fonction reste chaude.
+ */
+function transport(): Transport | null {
+  if (cached !== undefined) return cached;
   const user = env("GMAIL_USER") ?? "theo@gouman.fr";
   const GMAIL_CLIENT_ID = env("GMAIL_CLIENT_ID");
   const GMAIL_CLIENT_SECRET = env("GMAIL_CLIENT_SECRET");
   const GMAIL_REFRESH_TOKEN = env("GMAIL_REFRESH_TOKEN");
   // Google affiche le mot de passe d'application par groupes de 4 : on retire les espaces.
   const GMAIL_APP_PASSWORD = env("GMAIL_APP_PASSWORD")?.replace(/\s+/g, "");
+  const common = { service: "gmail", pool: true, maxConnections: 1 } as const;
 
   if (GMAIL_CLIENT_ID && GMAIL_CLIENT_SECRET && GMAIL_REFRESH_TOKEN) {
-    return {
+    cached = {
       user,
       t: nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          type: "OAuth2",
-          user,
-          clientId: GMAIL_CLIENT_ID,
-          clientSecret: GMAIL_CLIENT_SECRET,
-          refreshToken: GMAIL_REFRESH_TOKEN,
-        },
+        ...common,
+        auth: { type: "OAuth2", user, clientId: GMAIL_CLIENT_ID, clientSecret: GMAIL_CLIENT_SECRET, refreshToken: GMAIL_REFRESH_TOKEN },
       }),
     };
+  } else if (GMAIL_APP_PASSWORD) {
+    cached = { user, t: nodemailer.createTransport({ ...common, auth: { user, pass: GMAIL_APP_PASSWORD } }) };
+  } else {
+    cached = null;
   }
-  if (GMAIL_APP_PASSWORD) {
-    return {
-      user,
-      t: nodemailer.createTransport({ service: "gmail", auth: { user, pass: GMAIL_APP_PASSWORD } }),
-    };
-  }
-  return null;
+  return cached;
+}
+
+export function isMailerConfigured() {
+  return transport() !== null;
 }
 
 export async function sendOtpEmail(to: string[], name: string, code: string) {

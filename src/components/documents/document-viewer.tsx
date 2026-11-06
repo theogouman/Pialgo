@@ -18,6 +18,8 @@ export function DocumentViewer({ doc }: { doc: DocumentItem }) {
       }}
       renderObject={() => <Cover doc={doc} />}
       backdropClassName="bg-[#0f0f0f]"
+      pageColor="#0f0f0f"
+      pinchToClose={false}
       contentClassName="min-h-full"
       panelClassName="w-full"
     >
@@ -48,24 +50,29 @@ function ViewerBody({ doc }: { doc: DocumentItem }) {
   const pending = Math.max(0, pages.total - 1 - pages.pages.length);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center px-3 pb-16 sm:px-6">
+    <div className="flex min-h-dvh flex-col items-center px-3 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-[env(safe-area-inset-top)] sm:px-6">
       <ZoomSecondary className="sticky top-0 z-20 flex w-full max-w-[880px] items-center justify-between gap-3 py-3">
         <button
           type="button"
           onClick={close}
-          className="inline-flex h-10 items-center gap-1 rounded-full bg-white/12 pl-2.5 pr-4 text-[15px] font-medium text-white backdrop-blur-xl transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+          className="inline-flex h-10 items-center gap-1 rounded-full border border-white/10 bg-[#161616]/85 pl-2.5 pr-4 text-[15px] font-medium text-white shadow-[0_4px_16px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors hover:bg-[#161616] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         >
           <ChevronLeft className="size-5" strokeWidth={2} />
           Retour
         </button>
-        <p id="viewer-title" className="min-w-0 flex-1 truncate text-center text-[14px] font-medium text-white/70">
-          {doc.title}
-        </p>
+        <div className="flex min-w-0 flex-1 justify-center">
+          <p
+            id="viewer-title"
+            className="max-w-full truncate rounded-full border border-white/10 bg-[#161616]/85 px-3.5 py-1.5 text-[13px] font-medium text-white/85 shadow-[0_4px_16px_rgba(0,0,0,0.28)] backdrop-blur-xl"
+          >
+            {doc.title}
+          </p>
+        </div>
         {main ? (
           <a
             href={fileUrl(doc.id, main.index, true)}
             download
-            className="inline-flex h-10 items-center gap-2 rounded-full bg-white/12 px-4 text-[15px] font-medium text-white backdrop-blur-xl transition-colors hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#161616]/85 px-4 text-[15px] font-medium text-white shadow-[0_4px_16px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors hover:bg-[#161616] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             aria-label="Télécharger"
           >
             <Download className="size-[18px]" strokeWidth={2} />
