@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { Download, Maximize2, X } from "lucide-react";
+import { Maximize2, X } from "lucide-react";
 import { ZoomProvider, ZoomSecondary, ZoomTarget, useZoom, type ZoomContextValue } from "@/components/zoom/zoom";
 import { DocumentViewer } from "./document-viewer";
-import { addedOn, fileUrl, type DocumentItem } from "./types";
+import { DownloadButton } from "./download-button";
+import { addedOn, type DocumentItem } from "./types";
 
 /**
  * Vue détail (niveau 1). Elle porte son propre niveau de zoom (niveau 2) : l'aperçu
@@ -72,15 +73,12 @@ function DetailBody({ doc, detail }: { doc: DocumentItem; detail: ZoomContextVal
               <Maximize2 className="size-4" strokeWidth={2} />
               Ouvrir le document
             </button>
-            <a
-              href={fileUrl(doc.id, main.index, true)}
-              download
+            <DownloadButton
+              doc={doc}
+              index={main.index}
+              label={<span className="hidden sm:inline">Télécharger</span>}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-cloud px-5 text-[15px] font-medium text-ink transition-transform active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-mute/50"
-              aria-label="Télécharger"
-            >
-              <Download className="size-4" strokeWidth={2} />
-              <span className="hidden sm:inline">Télécharger</span>
-            </a>
+            />
           </div>
         ) : (
           <p className="mt-6 text-[14px] text-mute">Aucun fichier joint dans Notion.</p>

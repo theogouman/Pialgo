@@ -259,7 +259,13 @@ export function ZoomPresentation({
             data-zoom-object
             aria-hidden
             className="pointer-events-none absolute left-0 top-0 z-10 overflow-hidden bg-[#F4F4F9]"
-            style={{ contain: "strict", willChange: "transform", transformOrigin: "0 0" }}
+            style={{
+              contain: "strict",
+              willChange: "transform",
+              transformOrigin: "0 0",
+              // Force WebKit à découper les calques composités selon l'arrondi.
+              WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+            }}
           >
             <div ref={set("inner")} data-zoom-inner className="absolute left-0 top-0" style={{ transformOrigin: "0 0", willChange: "transform" }}>
               {renderObject(activeId)}

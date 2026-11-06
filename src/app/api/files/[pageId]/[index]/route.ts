@@ -37,9 +37,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ pageId: str
   const download = req.nextUrl.searchParams.get("download") === "1";
   const type = MIME[source.ext] ?? upstream.headers.get("content-type") ?? "application/octet-stream";
   const filename = encodeURIComponent(source.name);
+  const asciiName = source.name.normalize("NFD").replace(/[^\x20-\x7e]/g, "").replace(/["\\]/g, "_") || "document";
   const headers = new Headers({
     "Content-Type": type,
-    "Content-Disposition": `${download ? "attachment" : "inline"}; filename*=UTF-8''${filename}`,
+    // filename ASCII (repli) + filename* UTF-8 : noms accentués corrects partout.
+    "Content-Disposition": `${download ? "attachment" : "inline"}; filename="${asciiName}"; filename*=UTF-8''${filename}`,
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex, nofollow",
     "X-Content-Type-Options": "nosniff",

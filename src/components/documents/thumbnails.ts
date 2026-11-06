@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { zoomBusy } from "@/components/zoom/engine";
 import { fileUrl, type DocumentItem } from "./types";
 
 /**
@@ -41,14 +42,19 @@ export function useThumb(doc: DocumentItem) {
 
 // File d'attente : 2 rendus PDF simultanés maximum.
 let running = 0;
-const queue: (() => Promise<void>)[] = [];
-function enqueue(job: () => Promise<void>) {
-  queue.push(job);
+const queue: { id: string; job: () => Promise<void> }[] = [];
+function enqueue(id: string, job: () => Promise<void>) {
+  queue.push({ id, job });
   pump();
+}
+/** Fait passer un document en tête de file (clic de l'utilisateur). */
+function prioritize(id: string) {
+  const i = queue.findIndex((q) => q.id === id);
+  if (i > 0) queue.unshift(...queue.splice(i, 1));
 }
 function pump() {
   while (running < 2 && queue.length) {
-    const job = queue.shift()!;
+    const { job } = queue.shift()!;
     running++;
     job().finally(() => {
       running--;
@@ -102,7 +108,23 @@ async function openPdf(url: string) {
 
 type PdfDoc = Awaited<ReturnType<typeof openPdf>>["doc"];
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const idle = () =>
+  new Promise<void>((r) =>
+    "requestIdleCallback" in window ? window.requestIdleCallback(() => r(), { timeout: 300 }) : setTimeout(r, 30),
+  );
+
+/**
+ * Le rendu d'une page PDF occupe le fil principal : on attend qu'aucune transition
+ * ni geste ne soit en cours, puis un moment d'inactivité, pour ne jamais saccader.
+ */
+async function waitCalm() {
+  while (zoomBusy()) await sleep(80);
+  await idle();
+}
+
 async function renderPage(doc: PdfDoc, n: number, width: number) {
+  await waitCalm();
   const page = await doc.getPage(n);
   const base = page.getViewport({ scale: 1 });
   const viewport = page.getViewport({ scale: width / base.width });
@@ -171,7 +193,7 @@ export function requestThumb(doc: DocumentItem) {
   const file = doc.files.find((f) => f.kind === "image") ?? doc.files.find((f) => f.kind === "pdf");
   if (!file) return;
   const url = fileUrl(doc.id, file.index);
-  enqueue(async () => {
+  enqueue(doc.id, async () => {
     try {
       if (file.kind === "image") {
         const img = await loadImage(url);
@@ -188,4 +210,28 @@ export function requestThumb(doc: DocumentItem) {
       emit();
     }
   });
+}
+
+/**
+ * Préchargement au clic depuis la grille : miniature en priorité, octets du PDF tout
+ * de suite, puis pages suivantes rendues en arrière-plan dès que l'ouverture est finie.
+ * La visionneuse s'ouvre ensuite sans attente.
+ */
+export function prefetchDocument(doc: DocumentItem) {
+  requestThumb(doc);
+  prioritize(doc.id);
+  const pdf = doc.files.find((f) => f.kind === "pdf");
+  if (pdf) {
+    void fetchPdf(fileUrl(doc.id, pdf.index)).catch(() => {});
+    requestPdfPages(doc);
+  }
+}
+
+/** Octets d'un fichier (réutilise le PDF déjà chargé). */
+export async function fileBlob(doc: DocumentItem, index: number): Promise<Blob> {
+  const file = doc.files[index];
+  if (file?.kind === "pdf") return new Blob([await fetchPdf(fileUrl(doc.id, index))], { type: "application/pdf" });
+  const res = await fetch(fileUrl(doc.id, index, true));
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.blob();
 }

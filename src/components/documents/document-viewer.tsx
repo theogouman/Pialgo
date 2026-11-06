@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { ChevronLeft, Download } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { ZoomPresentation, ZoomSecondary, ZoomTarget, useZoom } from "@/components/zoom/zoom";
 import { Cover } from "./cover";
 import { getThumb, requestPdfPages, useThumb, usePdfPages } from "./thumbnails";
-import { fileUrl, type DocumentItem } from "./types";
+import type { DocumentItem } from "./types";
+import { DownloadButton } from "./download-button";
 
 /** Visionneuse plein écran (niveau 2 du zoom), dans le même onglet. */
 export function DocumentViewer({ doc }: { doc: DocumentItem }) {
@@ -69,15 +70,12 @@ function ViewerBody({ doc }: { doc: DocumentItem }) {
           </p>
         </div>
         {main ? (
-          <a
-            href={fileUrl(doc.id, main.index, true)}
-            download
+          <DownloadButton
+            doc={doc}
+            index={main.index}
+            label={<span className="hidden sm:inline">Télécharger</span>}
             className="inline-flex h-10 items-center gap-2 rounded-full border border-white/10 bg-[#161616]/85 px-4 text-[15px] font-medium text-white shadow-[0_4px_16px_rgba(0,0,0,0.28)] backdrop-blur-xl transition-colors hover:bg-[#161616] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-            aria-label="Télécharger"
-          >
-            <Download className="size-[18px]" strokeWidth={2} />
-            <span className="hidden sm:inline">Télécharger</span>
-          </a>
+          />
         ) : (
           <span className="w-10" />
         )}

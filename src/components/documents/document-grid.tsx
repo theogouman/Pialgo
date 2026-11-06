@@ -6,7 +6,7 @@ import { ZoomPresentation, ZoomSource, useZoom } from "@/components/zoom/zoom";
 import { CardVeil } from "./card-veil";
 import { Cover } from "./cover";
 import { DocumentDetail } from "./document-detail";
-import { getThumb, requestThumb } from "./thumbnails";
+import { getThumb, prefetchDocument, requestThumb } from "./thumbnails";
 import type { DocumentItem } from "./types";
 
 function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
@@ -40,7 +40,11 @@ function DocumentCard({ doc, index }: { doc: DocumentItem; index: number }) {
         ref={ref}
         type="button"
         data-zoom-trigger={doc.id}
-        onClick={() => open(doc.id)}
+        onPointerDown={() => prefetchDocument(doc)}
+        onClick={() => {
+          prefetchDocument(doc);
+          open(doc.id);
+        }}
         whileTap={reduce ? undefined : { scale: 0.97 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className="group block w-full cursor-pointer rounded-[22px] p-1.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-mute/50"

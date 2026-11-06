@@ -68,6 +68,11 @@ type TouchState =
 let scrollLocks = 0;
 const openStack: ZoomEngine[] = [];
 
+/** Vrai pendant une transition ou un geste : les travaux lourds (rendu PDF) attendent. */
+export function zoomBusy() {
+  return openStack.some((e) => e.phase !== "open" || e.gesturing());
+}
+
 export class ZoomEngine {
   readonly p = motionValue(0);
   readonly gx = motionValue(0);
@@ -370,6 +375,9 @@ export class ZoomEngine {
     object.style.width = `${R.w}px`;
     object.style.height = `${R.h}px`;
     object.style.borderRadius = `${radius}px`;
+    // Rayon exposé aux calques internes (Safari ne découpe pas les backdrop-filter
+    // selon l'arrondi d'un parent composité : ils doivent porter leur propre rayon).
+    object.style.setProperty("--zoom-radius", `${radius}px`);
     object.style.boxShadow = zoomShadow(dq);
     if (!object.hasAttribute("data-zoom-source-hidden")) {
       object.style.opacity = this.fallback ? String(clamp(p * 1.5)) : "1";
@@ -610,6 +618,10 @@ export class ZoomEngine {
       scroller.removeEventListener("gesturestart", onGesture);
       scroller.removeEventListener("click", onClickCapture, true);
     };
+  }
+
+  gesturing() {
+    return this.touch.mode === "drag" || this.touch.mode === "pinch";
   }
 
   clickSuppressed() {

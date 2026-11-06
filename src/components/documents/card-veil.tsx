@@ -11,6 +11,13 @@ const BLUR_LAYERS = [
   { blur: 16, from: 70, to: 100 },
 ];
 
+// Arrondi porté par les calques eux-mêmes (voir --zoom-radius dans le moteur zoom) ;
+// 18px = arrondi de la carte dans la grille.
+const corners = {
+  borderBottomLeftRadius: "var(--zoom-radius, 18px)",
+  borderBottomRightRadius: "var(--zoom-radius, 18px)",
+} as const;
+
 export function CardVeil({ title }: { title: string }) {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[50%]">
@@ -22,6 +29,7 @@ export function CardVeil({ title }: { title: string }) {
             data-zoom-fade
             className="absolute inset-0"
             style={{
+              ...corners,
               backdropFilter: `blur(${blur}px)`,
               WebkitBackdropFilter: `blur(${blur}px)`,
               maskImage: mask,
@@ -34,6 +42,7 @@ export function CardVeil({ title }: { title: string }) {
         data-zoom-fade
         className="absolute inset-0"
         style={{
+          ...corners,
           background:
             "linear-gradient(to bottom, rgba(10,10,10,0) 0%, rgba(10,10,10,0.35) 30%, rgba(10,10,10,0.72) 65%, rgba(10,10,10,0.88) 100%)",
         }}
