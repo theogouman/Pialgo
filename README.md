@@ -2,7 +2,7 @@
 
 Espace privé de la SCI familiale : connexion par code à usage unique envoyé par e-mail, puis accès aux documents stockés dans la base Notion « Documents ».
 
-Stack : Next.js 16 (App Router), Tailwind CSS 4, Motion, pdf.js. Composant de saisie OTP : [Rare UI](https://www.rareui.com) (licence MIT + Commons Clause, crédit visible sur l'écran de connexion).
+Stack : Next.js 16 (App Router), Tailwind CSS 4, Motion, pdf.js.
 
 ## Démarrer
 

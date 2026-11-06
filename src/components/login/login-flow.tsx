@@ -107,6 +107,11 @@ export function LoginFlow() {
   const [panelW, setPanelW] = useState(0);
   const [panelEl, setPanelEl] = useState<HTMLDivElement | null>(null);
   const [panelH, setPanelH] = useState(0);
+  // Le panneau sortant (AnimatePresence) se démonte APRÈS le montage du nouveau :
+  // on ignore son « null » pour continuer à mesurer le panneau actif.
+  const keepPanel = (el: HTMLDivElement | null) => {
+    if (el) setPanelEl(el);
+  };
 
   useLayoutEffect(() => {
     const el = wrapRef.current;
@@ -174,8 +179,8 @@ export function LoginFlow() {
 
           <AnimatePresence initial={false}>
             {step === "choose" && (
-              <Panel key="choose" reduce={!!reduce} width={panelW} panelRef={setPanelEl}>
-                <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">Qui êtes-vous ?</h2>
+              <Panel key="choose" reduce={!!reduce} width={panelW} panelRef={keepPanel}>
+                <h2 className="text-[19px] font-semibold tracking-[-0.01em] text-ink">Qui se connecte ?</h2>
                 <p className="mt-1 text-[14px] text-ink-soft">Un code à 4 chiffres vous sera envoyé par e-mail.</p>
                 <div role="radiogroup" aria-label="Choisissez votre nom" className="mt-5 grid grid-cols-2 gap-2.5">
                   {PEOPLE.map((p, i) => {
@@ -219,7 +224,7 @@ export function LoginFlow() {
               </Panel>
             )}
             {step === "code" && (
-              <Panel key="code" reduce={!!reduce} width={panelW} panelRef={setPanelEl}>
+              <Panel key="code" reduce={!!reduce} width={panelW} panelRef={keepPanel}>
                 <button
                   type="button"
                   onClick={() => {
@@ -276,12 +281,6 @@ export function LoginFlow() {
         </motion.div>
       </div>
 
-      <p className="absolute inset-x-0 bottom-4 text-center text-[11px] text-mute/80">
-        Saisie du code :{" "}
-        <a href="https://www.rareui.com" target="_blank" rel="noopener" className="underline underline-offset-2 hover:text-ink">
-          Rare UI
-        </a>
-      </p>
     </div>
   );
 }

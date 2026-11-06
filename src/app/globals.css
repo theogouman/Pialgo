@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Thème clair unique : « dark: » ne s'active qu'avec une classe .dark explicite
+   (sinon le mode sombre du téléphone rendait les chiffres OTP blancs sur blanc). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Thème sobre : pierre chaude, encre profonde, filets fins. */
 @theme inline {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;

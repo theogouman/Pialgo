@@ -65,6 +65,9 @@ type TouchState =
   | { mode: "drag"; ox: number; oy: number; bx: number; by: number; pointerId?: number }
   | { mode: "pinch"; d0: number; mx: number; my: number; bx: number; by: number; bk: number };
 
+let scrollLocks = 0;
+const openStack: ZoomEngine[] = [];
+
 export class ZoomEngine {
   readonly p = motionValue(0);
   readonly gx = motionValue(0);
@@ -186,6 +189,7 @@ export class ZoomEngine {
     if (src) {
       this.srcRadius = radiusOf(src);
       src.style.opacity = "0";
+      src.setAttribute("data-zoom-source-hidden", "");
     }
     if (this.els.slot) this.dstRadius = radiusOf(this.els.slot);
     if (this.els.root) {
@@ -194,6 +198,7 @@ export class ZoomEngine {
     }
     this.lockScroll();
     this.setInert(true);
+    if (!openStack.includes(this)) openStack.push(this);
 
     this.stopAll();
     this.gx.jump(0);
@@ -243,10 +248,15 @@ export class ZoomEngine {
   finish() {
     this.token++;
     this.stopAll();
-    if (this.sourceEl) this.sourceEl.style.opacity = "";
+    if (this.sourceEl) {
+      this.sourceEl.removeAttribute("data-zoom-source-hidden");
+      this.sourceEl.style.opacity = "";
+    }
     if (this.els.root) this.els.root.style.display = "none";
     this.unlockScroll();
     this.setInert(false);
+    const i = openStack.indexOf(this);
+    if (i >= 0) openStack.splice(i, 1);
     const focusTarget =
       this.restoreFocus?.isConnected
         ? this.restoreFocus
@@ -315,7 +325,9 @@ export class ZoomEngine {
     object.style.height = `${R.h}px`;
     object.style.borderRadius = `${radius}px`;
     object.style.boxShadow = zoomShadow(dq);
-    object.style.opacity = this.fallback ? String(clamp(p * 1.5)) : "1";
+    if (!object.hasAttribute("data-zoom-source-hidden")) {
+      object.style.opacity = this.fallback ? String(clamp(p * 1.5)) : "1";
+    }
 
     // Contenu : base dimensionnée en « cover » sur la destination, puis échelle UNIFORME
     // pour couvrir le cadre courant. Jamais d'étirement, une seule image.
@@ -486,7 +498,7 @@ export class ZoomEngine {
     const onPointerDown = (e: PointerEvent) => {
       if (e.pointerType === "touch" || e.button !== 0 || !this.interactive()) return;
       const target = e.target as HTMLElement;
-      if (target.closest("button, a:not([data-zoom-drag]), input, textarea, select, [data-zoom-nodrag]")) return;
+      if (target.closest("button:not([data-zoom-drag]), a:not([data-zoom-drag]), input, textarea, select, [data-zoom-nodrag]")) return;
       if (!atTop()) return;
       this.touch = { mode: "pending", x0: e.clientX, y0: e.clientY, pointerId: e.pointerId };
     };
@@ -560,11 +572,22 @@ export class ZoomEngine {
     for (const v of [this.p, this.gx, this.gy, this.gk, this.dq, this.fade]) v.stop();
   }
 
+  // Verrou partagé : plusieurs niveaux de zoom peuvent être ouverts en même temps.
+  private scrollLocked = false;
   private lockScroll() {
-    document.documentElement.style.overflow = "hidden";
+    if (this.scrollLocked) return;
+    this.scrollLocked = true;
+    if (scrollLocks++ === 0) document.documentElement.style.overflow = "hidden";
   }
   private unlockScroll() {
-    document.documentElement.style.overflow = "";
+    if (!this.scrollLocked) return;
+    this.scrollLocked = false;
+    if (--scrollLocks === 0) document.documentElement.style.overflow = "";
+  }
+
+  /** Vrai si ce niveau est le plus haut ouvert (seul lui réagit à Échap / Tab). */
+  isTopmost() {
+    return openStack[openStack.length - 1] === this;
   }
 
   private setInert(on: boolean) {

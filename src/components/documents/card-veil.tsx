@@ -13,7 +13,7 @@ const BLUR_LAYERS = [
 
 export function CardVeil({ title }: { title: string }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[46%]">
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-[50%]">
       {BLUR_LAYERS.map(({ blur, from, to }) => {
         const mask = `linear-gradient(to bottom, transparent ${from}%, #000 ${to}%)`;
         return (
@@ -35,7 +35,7 @@ export function CardVeil({ title }: { title: string }) {
         className="absolute inset-0"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(16,16,16,0) 0%, rgba(16,16,16,0.18) 35%, rgba(16,16,16,0.55) 75%, rgba(16,16,16,0.72) 100%)",
+            "linear-gradient(to bottom, rgba(10,10,10,0) 0%, rgba(10,10,10,0.35) 30%, rgba(10,10,10,0.72) 65%, rgba(10,10,10,0.88) 100%)",
         }}
       />
       <p

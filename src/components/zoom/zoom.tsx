@@ -19,7 +19,7 @@ import { ZoomEngine, ZOOM_REST_SHADOW, type ObjectMeta } from "./engine";
 
 export { ZOOM_REST_SHADOW };
 
-type ZoomContextValue = {
+export type ZoomContextValue = {
   engine: ZoomEngine;
   activeId: string | null;
   open: (id: string) => void;
@@ -80,8 +80,20 @@ export function ZoomSource({
 }
 
 /** Emplacement de destination dans la vue détail. L'objet vient s'y poser. */
-export function ZoomTarget({ className, style, children }: { className?: string; style?: CSSProperties; children?: ReactNode }) {
-  const { engine } = useZoom();
+export function ZoomTarget({
+  className,
+  style,
+  children,
+  zoom,
+}: {
+  className?: string;
+  style?: CSSProperties;
+  children?: ReactNode;
+  /** Niveau de zoom visé, si plusieurs sont imbriqués (sinon le plus proche). */
+  zoom?: ZoomContextValue;
+}) {
+  const ctx = useContext(ZoomContext);
+  const engine = (zoom ?? ctx)!.engine;
   const ref = useCallback(
     (el: HTMLDivElement | null) => {
       engine.setEl("slot", el);
@@ -100,12 +112,16 @@ export function ZoomSecondary({
   className,
   children,
   offset = 10,
+  zoom,
 }: {
   className?: string;
   children: ReactNode;
   offset?: number;
+  /** Niveau de zoom visé, si plusieurs sont imbriqués (sinon le plus proche). */
+  zoom?: ZoomContextValue;
 }) {
-  const { engine } = useZoom();
+  const ctx = useContext(ZoomContext);
+  const engine = (zoom ?? ctx)!.engine;
   const chrome = engine.chrome as MotionValue<number>;
   const y = useTransform(chrome, (v) => (1 - v) * offset);
   return (
@@ -171,6 +187,7 @@ export function ZoomPresentation({
     const unbind = scroller ? engine.bindGestures(scroller) : undefined;
     const onResize = () => engine.schedule();
     const onKey = (e: KeyboardEvent) => {
+      if (!engine.isTopmost()) return;
       if (e.key === "Escape") {
         e.preventDefault();
         close();

@@ -76,29 +76,93 @@ function pdfjs() {
   return pdfjsPromise;
 }
 
-async function renderPdf(url: string): Promise<{ src: string; aspect: number }> {
+// Octets des PDF gardés en mémoire (session d'onglet) : la miniature et la
+// visionneuse partagent un seul téléchargement.
+const pdfBytes = new Map<string, Promise<ArrayBuffer>>();
+function fetchPdf(url: string) {
+  let p = pdfBytes.get(url);
+  if (!p) {
+    p = fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.arrayBuffer();
+    });
+    p.catch(() => pdfBytes.delete(url));
+    pdfBytes.set(url, p);
+  }
+  return p;
+}
+
+async function openPdf(url: string) {
   const lib = await pdfjs();
-  const task = lib.getDocument({ url });
-  const doc = await task.promise;
+  // copie : pdf.js transfère le buffer au worker
+  const data = new Uint8Array((await fetchPdf(url)).slice(0));
+  const task = lib.getDocument({ data });
+  return { task, doc: await task.promise };
+}
+
+type PdfDoc = Awaited<ReturnType<typeof openPdf>>["doc"];
+
+async function renderPage(doc: PdfDoc, n: number, width: number) {
+  const page = await doc.getPage(n);
+  const base = page.getViewport({ scale: 1 });
+  const viewport = page.getViewport({ scale: width / base.width });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvas, canvasContext: ctx, viewport }).promise;
+  const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.88));
+  if (!blob) throw new Error("toBlob");
+  const src = URL.createObjectURL(blob);
+  await loadImage(src); // décodé avant affichage : pas de flash
+  return { src, aspect: canvas.width / canvas.height };
+}
+
+async function renderPdf(url: string): Promise<{ src: string; aspect: number }> {
+  const { task, doc } = await openPdf(url);
   try {
-    const page = await doc.getPage(1);
-    const base = page.getViewport({ scale: 1 });
-    const viewport = page.getViewport({ scale: 1100 / base.width });
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.round(viewport.width);
-    canvas.height = Math.round(viewport.height);
-    const ctx = canvas.getContext("2d")!;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvas, canvasContext: ctx, viewport }).promise;
-    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.86));
-    if (!blob) throw new Error("toBlob");
-    const src = URL.createObjectURL(blob);
-    await loadImage(src); // décodé avant affichage : pas de flash
-    return { src, aspect: canvas.width / canvas.height };
+    return await renderPage(doc, 1, 1100);
   } finally {
     void task.destroy();
   }
+}
+
+export type PdfPage = { src: string; aspect: number };
+type PagesState = { total: number; pages: PdfPage[]; done: boolean };
+const pagesCache = new Map<string, PagesState>();
+const pagesStarted = new Set<string>();
+
+/** Rend les pages 2..N d'un PDF pour la visionneuse (la page 1 est la miniature). */
+export function requestPdfPages(doc: DocumentItem) {
+  const file = doc.files.find((f) => f.kind === "pdf");
+  if (!file || pagesStarted.has(doc.id)) return;
+  pagesStarted.add(doc.id);
+  const url = fileUrl(doc.id, file.index);
+  void (async () => {
+    try {
+      const { task, doc: pdf } = await openPdf(url);
+      const state: PagesState = { total: pdf.numPages, pages: [], done: pdf.numPages <= 1 };
+      pagesCache.set(doc.id, { ...state });
+      emit();
+      const width = Math.min(1600, Math.round(window.innerWidth * Math.min(window.devicePixelRatio || 1, 2)));
+      for (let n = 2; n <= pdf.numPages; n++) {
+        state.pages.push(await renderPage(pdf, n, Math.max(900, width)));
+        pagesCache.set(doc.id, { ...state, pages: [...state.pages], done: n === pdf.numPages });
+        emit();
+      }
+      void task.destroy();
+    } catch (err) {
+      console.warn("[visionneuse] échec", doc.title, err);
+      pagesStarted.delete(doc.id);
+    }
+  })();
+}
+
+const NO_PAGES: PagesState = { total: 0, pages: [], done: false };
+export function usePdfPages(id: string) {
+  return useSyncExternalStore(subscribe, () => pagesCache.get(id) ?? NO_PAGES, () => NO_PAGES);
 }
 
 export function requestThumb(doc: DocumentItem) {

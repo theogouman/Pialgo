@@ -1,6 +1,4 @@
 "use client";
-// Composant OTP issu de Rare UI (https://www.rareui.com) — github.com/swamimalode07/rare-ui.
-// Licence MIT + Commons Clause : conserver cette mention et le lien de crédit visible.
 
 import { useRef, useState, type ComponentProps } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
