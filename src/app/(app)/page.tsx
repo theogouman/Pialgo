@@ -1,13 +1,14 @@
 import { redirect } from "next/navigation";
-import { Dashboard } from "@/components/dashboard";
+import { DocumentsView } from "@/components/documents-view";
 import { getSession } from "@/lib/server/session";
 import { isNotionConfigured, listDocuments, type DocumentItem } from "@/lib/server/notion";
-import { personName } from "@/lib/people";
 import { DEMO_DOCS, demoEnabled } from "@/lib/server/demo";
 
-export default async function Home() {
-  const session = await getSession();
-  if (!session) redirect("/login");
+export const metadata = { title: "Documents · SCI Pialgo" };
+
+export default async function DocumentsPage() {
+  // Le layout vérifie aussi la session ; la page la revérifie avant d'interroger Notion.
+  if (!(await getSession())) redirect("/login");
 
   let documents: DocumentItem[] = [];
   let error: string | null = null;
@@ -24,5 +25,5 @@ export default async function Home() {
     }
   }
 
-  return <Dashboard userName={personName(session.personId)} documents={documents} error={error} />;
+  return <DocumentsView documents={documents} error={error} />;
 }
